@@ -7,9 +7,15 @@ Unified CLI for Conway's Game of Life.
 • Results are appended to data/results.csv.
 """
 
-from __future__ import annotations
-import argparse, csv, multiprocessing as mp, pathlib, time
-import numpy as np, matplotlib.pyplot as plt, IPython.display as dsp
+import argparse
+import csv
+import multiprocessing as mp
+import pathlib
+
+import numpy as np
+import matplotlib.pyplot as plt
+from IPython.display import clear_output, display
+
 from src.life_core import run_until_collapse, life_step
 
 OUT_PATH = pathlib.Path("data/results.csv")
@@ -37,7 +43,7 @@ def run_with_animation(size: int, prob: float) -> tuple[int, np.ndarray]:
     Returns
     -------
     cycles : int
-    init_board : np.ndarray (the initial configuration)
+    init_board : np.ndarray
     """
     board = np.random.rand(size, size) < prob
     init_board = board.copy()
@@ -45,10 +51,10 @@ def run_with_animation(size: int, prob: float) -> tuple[int, np.ndarray]:
     cycles = 0
 
     fig, ax = plt.subplots(figsize=(4, 4))
-    img   = ax.imshow(board, cmap="binary", animated=True)
-    title = ax.set_title("Gen 0")
+    img = ax.imshow(board, cmap="binary")
     ax.axis("off")
-    plt.show(block=False)
+    title = ax.set_title("Gen 0")
+    display(fig)
 
     while True:
         next_board = life_step(board)
@@ -56,8 +62,8 @@ def run_with_animation(size: int, prob: float) -> tuple[int, np.ndarray]:
 
         img.set_data(next_board)
         title.set_text(f"Gen {cycles}")
-        fig.canvas.draw_idle()
-        plt.pause(0.001)
+        clear_output(wait=True)
+        display(fig)
 
         if not next_board.any():
             return cycles, init_board
@@ -77,13 +83,16 @@ def _one_run(args: tuple[int, float]) -> tuple[int, float, int, str]:
 
 
 def main() -> None:
-    p = argparse.ArgumentParser(description="Game-of-Life simulator")
-    p.add_argument("--size",    type=int,   default=50,  help="board side length")
-    p.add_argument("--prob",    type=float, default=0.2, help="initial alive probability")
-    p.add_argument("--runs",    type=int,   default=1,   help="number of boards to run")
-    p.add_argument("--workers", type=int,   default=mp.cpu_count(),
-                   help="parallel processes (runs > 1)")
-    args = p.parse_args()
+    parser = argparse.ArgumentParser(description="Game-of-Life simulator")
+    parser.add_argument("--size",    type=int,   default=50,
+                        help="board side length")
+    parser.add_argument("--prob",    type=float, default=0.2,
+                        help="initial alive probability")
+    parser.add_argument("--runs",    type=int,   default=1,
+                        help="number of boards to run")
+    parser.add_argument("--workers", type=int,   default=mp.cpu_count(),
+                        help="parallel processes (runs > 1)")
+    args = parser.parse_args()
 
     if args.runs == 1:
         cycles, init_board = run_with_animation(args.size, args.prob)
