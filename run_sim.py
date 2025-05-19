@@ -38,34 +38,53 @@ def _animate(board: np.ndarray, pause: float) -> None:
     time.sleep(pause)
 
 
-def run_with_animation(size: int, prob: float, pause: float) -> int:
-    """Animate a single Game-of-Life board with minimal flicker."""
-    board = np.random.rand(size, size) < prob
+def run_with_animation(
+    size: int,
+    prob: float,
+    pause: float,
+    max_cycles: int = 5000,   # hard stop to avoid endless viewing
+    skip: int = 3             # update display every N generations
+) -> int:
+    """
+    Animate one board with minimal flicker.
+    Returns the number of cycles lived (or max_cycles, whichever comes first).
+    """
+    import zlib
 
-    # Create figure once
+    board = np.random.rand(size, size) < prob
+    seen  = {zlib.crc32(board.tobytes())}   # detect any period
+    cycles = 0
+
+    # --- set up the figure once ---
     fig, ax = plt.subplots(figsize=(4, 4))
-    img = ax.imshow(board, cmap="binary", animated=True)
-    ax.axis("off")
+    img   = ax.imshow(board, cmap="binary", animated=True)
     title = ax.set_title("Gen 0")
+    ax.axis("off")
     plt.show(block=False)
 
-    cycles = 0
     while True:
-        plt.pause(pause)  # allow UI thread to update
+        if max_cycles and cycles >= max_cycles:
+            print("Max cycles reached; stopping animation")
+            return cycles
 
-        # Advance one generation
-        nxt = life_step(board)
-        cycles += 1
+        # advance 'skip' generations without drawing each one
+        for _ in range(skip):
+            board = life_step(board)
+            cycles += 1
+            h = zlib.crc32(board.tobytes())
+            if not board.any() or h in seen:
+                img.set_data(board)
+                title.set_text(f"Gen {cycles}")
+                fig.canvas.draw_idle()
+                return cycles
+            seen.add(h)
 
-        # Update image in place
-        img.set_data(nxt)
+        # update display
+        img.set_data(board)
         title.set_text(f"Gen {cycles}")
         fig.canvas.draw_idle()
+        plt.pause(pause)
 
-        # Stop conditions
-        if not nxt.any() or np.array_equal(nxt, board):
-            return cycles
-        board = nxt
 
 # ----- worker for multiprocessing (runs > 1) -----
 def _one_run(args: tuple[int, float]) -> tuple[int, float, int, str]:
