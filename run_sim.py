@@ -10,6 +10,7 @@ Unified CLI for Conway's Game of Life.
 from __future__ import annotations
 import argparse, csv, multiprocessing as mp, pathlib, time
 import numpy as np, matplotlib.pyplot as plt, IPython.display as dsp
+import zlib
 from src.life_core import run_until_collapse, life_step
 
 OUT_PATH = pathlib.Path("data/results.csv")
