@@ -181,3 +181,6 @@ cython_debug/
 # Personal SSH keys – keep local, never push
 id_ed25519_life
 id_ed25519_life.pub
+
+# Author file
+author.txt
