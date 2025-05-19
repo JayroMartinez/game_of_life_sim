@@ -39,16 +39,33 @@ def _animate(board: np.ndarray, pause: float) -> None:
 
 
 def run_with_animation(size: int, prob: float, pause: float) -> int:
+    """Animate a single Game-of-Life board with minimal flicker."""
     board = np.random.rand(size, size) < prob
+
+    # Create figure once
+    fig, ax = plt.subplots(figsize=(4, 4))
+    img = ax.imshow(board, cmap="binary", animated=True)
+    ax.axis("off")
+    title = ax.set_title("Gen 0")
+    plt.show(block=False)
+
     cycles = 0
     while True:
-        _animate(board, pause)
+        plt.pause(pause)  # allow UI thread to update
+
+        # Advance one generation
         nxt = life_step(board)
         cycles += 1
+
+        # Update image in place
+        img.set_data(nxt)
+        title.set_text(f"Gen {cycles}")
+        fig.canvas.draw_idle()
+
+        # Stop conditions
         if not nxt.any() or np.array_equal(nxt, board):
             return cycles
         board = nxt
-
 
 # ----- worker for multiprocessing (runs > 1) -----
 def _one_run(args: tuple[int, float]) -> tuple[int, float, int, str]:
