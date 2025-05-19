@@ -175,3 +175,7 @@ cython_debug/
 
 # macOS folder metadata
 .DS_Store
+
+# Personal SSH keys – keep local, never push
+id_ed25519_life
+id_ed25519_life.pub
