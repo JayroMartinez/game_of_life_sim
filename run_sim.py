@@ -10,7 +10,6 @@ Unified CLI for Conway's Game of Life.
 from __future__ import annotations
 import argparse, csv, multiprocessing as mp, pathlib, time
 import numpy as np, matplotlib.pyplot as plt, IPython.display as dsp
-import zlib
 from src.life_core import run_until_collapse, life_step
 
 OUT_PATH = pathlib.Path("data/results.csv")
@@ -30,36 +29,19 @@ def append_rows(rows: list[tuple[int, float, int, str]]) -> None:
         w.writerows(rows)
 
 
-# ----- animation helpers (runs == 1) -----
-def _animate(board: np.ndarray, pause: float) -> None:
-    dsp.clear_output(wait=True)
-    plt.imshow(board, cmap="binary")
-    plt.axis("off")
-    plt.show()
-    time.sleep(pause)
-
-def run_with_animation(
-    size: int,
-    prob: float,
-    pause: float,
-    max_cycles: int = 5000,   # hard stop to avoid endless viewing
-    skip: int = 3             # update display every N generations
-) -> int:
+def run_with_animation(size: int, prob: float) -> tuple[int, np.ndarray]:
     """
-    Animate one board with minimal flicker.
-    Returns the number of cycles lived (or max_cycles, whichever comes first).
+    Animate one board smoothly, stopping on extinction,
+    still life (period-1) or 2-cycle (period-2).
+
+    Returns
+    -------
+    cycles : int
+    init_board : np.ndarray (the initial configuration)
     """
-    import zlib
-
     board = np.random.rand(size, size) < prob
-    seen  = {zlib.crc32(board.tobytes())}   # detect any period
-    cycles = 0
-
-    # --- set up the figure once ---
-def run_with_animation(size: int, prob: float, pause: float,
-                       max_cycles: int = 5000, skip: int = 3) -> int:
-    board = np.random.rand(size, size) < prob
-    seen  = {zlib.crc32(board.tobytes())}
+    init_board = board.copy()
+    prev, prev2 = None, None
     cycles = 0
 
     fig, ax = plt.subplots(figsize=(4, 4))
@@ -69,39 +51,25 @@ def run_with_animation(size: int, prob: float, pause: float,
     plt.show(block=False)
 
     while True:
-        if max_cycles and cycles >= max_cycles:
-            print("Max cycles reached; stopping animation")
-            return cycles
+        next_board = life_step(board)
+        cycles += 1
 
-        # advance 'skip' generations without drawing each one
-        for _ in range(skip):
-            board = life_step(board)
-            cycles += 1
-            h = zlib.crc32(board.tobytes())
-            if not board.any() or h in seen:
-                img.set_data(board)
-                title.set_text(f"Gen {cycles}")
-                fig.canvas.draw_idle()
-                return cycles
-            seen.add(h)
-
-        # update display
-
-            h = zlib.crc32(board.tobytes())
-            if not board.any() or h in seen:
-                img.set_data(board)
-                title.set_text(f"Gen {cycles}")
-                fig.canvas.draw_idle()
-                return cycles
-            seen.add(h)
-
-        # draw the current frame
-        img.set_data(board)
+        img.set_data(next_board)
         title.set_text(f"Gen {cycles}")
         fig.canvas.draw_idle()
-        plt.pause(pause)
+        plt.pause(0.001)
 
-# ----- worker for multiprocessing (runs > 1) -----
+        if not next_board.any():
+            return cycles, init_board
+        if prev is not None and np.array_equal(next_board, prev):
+            return cycles, init_board
+        if prev2 is not None and np.array_equal(next_board, prev2):
+            return cycles, init_board
+
+        prev2, prev = prev, board
+        board = next_board
+
+
 def _one_run(args: tuple[int, float]) -> tuple[int, float, int, str]:
     size, prob = args
     cycles, init_board = run_until_collapse(size, prob)
@@ -110,20 +78,18 @@ def _one_run(args: tuple[int, float]) -> tuple[int, float, int, str]:
 
 def main() -> None:
     p = argparse.ArgumentParser(description="Game-of-Life simulator")
-    p.add_argument("--size",     type=int,   default=50,  help="board side length")
-    p.add_argument("--prob",     type=float, default=0.2, help="initial alive probability")
-    p.add_argument("--runs",     type=int,   default=1,   help="number of boards to run")
-    p.add_argument("--workers",  type=int,   default=mp.cpu_count(),
+    p.add_argument("--size",    type=int,   default=50,  help="board side length")
+    p.add_argument("--prob",    type=float, default=0.2, help="initial alive probability")
+    p.add_argument("--runs",    type=int,   default=1,   help="number of boards to run")
+    p.add_argument("--workers", type=int,   default=mp.cpu_count(),
                    help="parallel processes (runs > 1)")
-    p.add_argument("--pause",    type=float, default=0.1,
-                   help="seconds between frames when runs == 1")
     args = p.parse_args()
 
-    if args.runs == 1:                                 # animated single run
-        cycles = run_with_animation(args.size, args.prob, args.pause)
+    if args.runs == 1:
+        cycles, init_board = run_with_animation(args.size, args.prob)
         print(f"prob={args.prob}  cycles={cycles}")
-        append_rows([(args.size, args.prob, cycles, "N/A")])
-    else:                                              # parallel batch
+        append_rows([(args.size, args.prob, cycles, board_to_string(init_board))])
+    else:
         with mp.Pool(args.workers) as pool:
             rows = pool.map(_one_run, [(args.size, args.prob)] * args.runs)
         for _, pr, cy, _ in rows:
