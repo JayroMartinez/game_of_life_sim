@@ -38,34 +38,41 @@ def _animate(board: np.ndarray, pause: float) -> None:
     time.sleep(pause)
 
 
-def run_with_animation(size: int, prob: float, pause: float) -> int:
-    """Animate a single Game-of-Life board with minimal flicker."""
+def run_with_animation(size: int, prob: float, pause: float,
+                       max_cycles: int = 5000, skip: int = 3) -> int:
     board = np.random.rand(size, size) < prob
+    seen  = {zlib.crc32(board.tobytes())}
+    cycles = 0
 
-    # Create figure once
     fig, ax = plt.subplots(figsize=(4, 4))
-    img = ax.imshow(board, cmap="binary", animated=True)
-    ax.axis("off")
+    img   = ax.imshow(board, cmap="binary", animated=True)
     title = ax.set_title("Gen 0")
+    ax.axis("off")
     plt.show(block=False)
 
-    cycles = 0
     while True:
-        plt.pause(pause)  # allow UI thread to update
+        if max_cycles and cycles >= max_cycles:
+            print("Max cycles reached; stopping animation")
+            return cycles
 
-        # Advance one generation
-        nxt = life_step(board)
-        cycles += 1
+        # advance 'skip' generations without drawing each one
+        for _ in range(skip):
+            board = life_step(board)
+            cycles += 1
 
-        # Update image in place
-        img.set_data(nxt)
+            h = zlib.crc32(board.tobytes())
+            if not board.any() or h in seen:
+                img.set_data(board)
+                title.set_text(f"Gen {cycles}")
+                fig.canvas.draw_idle()
+                return cycles
+            seen.add(h)
+
+        # draw the current frame
+        img.set_data(board)
         title.set_text(f"Gen {cycles}")
         fig.canvas.draw_idle()
-
-        # Stop conditions
-        if not nxt.any() or np.array_equal(nxt, board):
-            return cycles
-        board = nxt
+        plt.pause(pause)
 
 # ----- worker for multiprocessing (runs > 1) -----
 def _one_run(args: tuple[int, float]) -> tuple[int, float, int, str]:
