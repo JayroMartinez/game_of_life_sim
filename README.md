@@ -1,19 +1,28 @@
 # game_of_life_sim
 
-A Python-based simulator for Conway’s Game of Life.  
-Features both an animated, interactive single-board run and a high-throughput batch mode that logs results to CSV.
+A Python simulator for Conway’s Game of Life.
+
+## Description
+
+This project offers two modes of use:
+
+- **Local Execution:**  
+  Run the simulation directly via the command-line interface (CLI) using the Python scripts in `src/` and `run_sim.py`.
+
+- **Notebook Demo:**  
+  Use the Jupyter notebook (`game_of_life_demo.ipynb`) in Colab or locally to see interactive animations. Note that Colab sessions are ephemeral; you must save or export your `data/results.csv` manually if you want to preserve results beyond the session.
 
 ## Features
 
 - **Interactive mode**  
   Animate one board in real time inside Jupyter/Colab.
+
 - **Batch mode**  
   Run many simulations in parallel (via multiprocessing) and record  
   `size`, `prob`, `cycles`, and `init_board` to `data/results.csv`.
-- **Portable CLI**  
-  All logic lives in `src/life_core.py`; entry point is `run_sim.py`.
-- **Demo notebook**  
-  `game_of_life_demo.ipynb` shows how to clone, install, animate, and batch-run in Colab.
+
+- **Command-line interface**  
+  Run simulations locally with `run_sim.py` for flexible scripting and batch jobs.
 
 ## Requirements
 
@@ -37,49 +46,45 @@ pip install -r requirements.txt
 
 ## Usage
 
-### Animated single run
+### Local CLI
 
-In a terminal or Jupyter environment:
+Run a single animated simulation in your terminal:
 
 ```bash
 python run_sim.py --size 60 --prob 0.25
 ```
 
-- `--size`   Board width/height (square).  
-- `--prob`   Initial probability of a live cell (0–1).  
-
-In Jupyter/Colab, for inline rendering use:
-
-```python
-%run -i run_sim.py --size 60 --prob 0.25
-```
-
-### Batch headless run
-
-Run 10 000 boards in parallel and append results to `data/results.csv`:
+Run a headless batch of 10 000 boards:
 
 ```bash
 python run_sim.py --runs 10000 --size 60 --prob 0.25 --workers 8
 ```
 
-- `--runs`    Number of boards to simulate.  
-- `--workers` Number of parallel processes (defaults to CPU core count).  
+### Notebook Demo
 
-### Demo in Colab
+Open `game_of_life_demo.ipynb` in Jupyter or Colab:
 
-Open [game_of_life_demo.ipynb](game_of_life_demo.ipynb) in Colab for a step-by-step guide.
+```bash
+# In Colab:
+https://colab.research.google.com/github/<your-user>/game_of_life_sim/blob/main/game_of_life_demo.ipynb
+```
+
+Then:
+1. Run the setup cell to clone and install dependencies.  
+2. Execute the animated and batch example cells.  
+3. **Important:** Colab sessions are temporary. Download or push `data/results.csv` if you want to keep results beyond the session.
 
 ## Project Structure
 
 ```
 game_of_life_sim/
+├── data/                  # results.csv is saved here at runtime
 ├── src/
 │   ├── __init__.py
 │   └── life_core.py       # Core simulation logic
 ├── run_sim.py             # CLI entry point
 ├── requirements.txt       # Project dependencies
 ├── game_of_life_demo.ipynb# Jupyter demo (public)
-├── data/                  # results.csv is appended here
 └── README.md
 ```
 
