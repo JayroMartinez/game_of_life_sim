@@ -39,7 +39,7 @@ pip install -r requirements.txt
 ## Installation
 
 ```bash
-git clone https://github.com/<your-user>/game_of_life_sim.git
+git clone https://github.com/JayroMartinez/game_of_life_sim.git
 cd game_of_life_sim
 pip install -r requirements.txt
 ```
@@ -66,7 +66,7 @@ Open `game_of_life_demo.ipynb` in Jupyter or Colab:
 
 ```bash
 # In Colab:
-https://colab.research.google.com/github/<your-user>/game_of_life_sim/blob/main/game_of_life_demo.ipynb
+https://colab.research.google.com/github/JayroMartinez/game_of_life_sim/blob/main/game_of_life_demo.ipynb
 ```
 
 Then:
@@ -78,16 +78,12 @@ Then:
 
 ```
 game_of_life_sim/
-├── data/                  # results.csv is saved here at runtime
+├── data/                   # results.csv is saved here at runtime
 ├── src/
 │   ├── __init__.py
-│   └── life_core.py       # Core simulation logic
-├── run_sim.py             # CLI entry point
-├── requirements.txt       # Project dependencies
-├── game_of_life_demo.ipynb# Jupyter demo (public)
+│   └── life_core.py        # Core simulation logic
+├── run_sim.py              # CLI entry point
+├── requirements.txt        # Project dependencies
+├── game_of_life_demo.ipynb # Jupyter demo (public)
 └── README.md
 ```
-
-## License
-
-This project is released under the MIT License.
