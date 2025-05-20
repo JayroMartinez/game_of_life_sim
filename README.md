@@ -66,7 +66,7 @@ Open `game_of_life_demo.ipynb` in Jupyter or Colab:
 
 ```bash
 # In Colab:
-https://colab.research.google.com/github/JayroMartinez/game_of_life_sim/blob/main/game_of_life_demo.ipynb
+https://colab.research.google.com/github/JayroMartinez/game_of_life_sim/blob/main/game_of_life_sim.ipynb
 ```
 
 Then:
