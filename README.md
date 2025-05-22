@@ -14,8 +14,8 @@ This project offers two modes of use:
 
 ## Features
 
-- **Interactive mode**  
-  Animate one board in real time inside Jupyter/Colab.
+**Inline GIF animation**  
+  Run the simulation until collapse and export it as a self-contained GIF for smooth playback on any device.
 
 - **Batch mode**  
   Run many simulations in parallel (via multiprocessing) and record  
@@ -29,6 +29,7 @@ This project offers two modes of use:
 - Python 3.8+  
 - NumPy ≥1.25  
 - Matplotlib ≥3.8  
+- Imageio ≥ 2.9
 
 Install with:
 
